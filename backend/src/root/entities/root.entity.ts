@@ -1,15 +1,15 @@
-//    posts/posts.entity.ts
+// 
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
-@Entity("posts")
-export class PostsEntity {
+@Entity("users")
+export class UsersEntity {
     @PrimaryGeneratedColumn()
     id:number; // 标记为主列，值自动生成
 
-    @Column({ length:50 })
-    title: string;
+    @Column('int')
+    uid: number;
 
-    @Column({ length: 20,default:''})
+    @Column({ length: 20})
     author: string;
 
     @Column("text")
