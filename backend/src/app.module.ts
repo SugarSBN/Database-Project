@@ -6,6 +6,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import envConfig from '../config/env';
 import { PostsEntity } from './posts/posts.entity';
+import { InfoModule } from './info/info.module';
+import { UserModule } from './user/user.module';
+import { SubmitModule } from './submit/submit.module';
+import { ManageModule } from './manage/manage.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ 
@@ -28,6 +32,10 @@ import { PostsEntity } from './posts/posts.entity';
       }),
     }),
     PostsModule,
+    InfoModule,
+    UserModule,
+    SubmitModule,
+    ManageModule,
   ], 
   controllers: [AppController],
   providers: [AppService]
