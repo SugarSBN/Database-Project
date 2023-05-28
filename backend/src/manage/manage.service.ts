@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CreateManageDto } from './dto/create-manage.dto';
 import { UpdateManageDto } from './dto/update-manage.dto';
-
+import { InfoModule } from 'src/info/info.module';
+import { InfoService } from 'src/info/info.service';
+import { InfoController } from 'src/info/info.controller';
 @Injectable()
 export class ManageService {
   create(createManageDto: CreateManageDto) {
+   
     return 'This action adds a new manage';
   }
 

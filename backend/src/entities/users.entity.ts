@@ -6,6 +6,9 @@ export class UsersEntity {
     @PrimaryGeneratedColumn()
     id:number; 
 
+    @Column({ length: 50, default: 'u2'})
+    nid:string;
+
     @Column({ length:50 })
     name: string;
 

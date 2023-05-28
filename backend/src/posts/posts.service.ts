@@ -2,6 +2,7 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, getRepository, Repository } from 'typeorm';
 import { PostsEntity } from './posts.entity';
+import { getManager } from "typeorm";
 
 export interface PostsRo {
   list: PostsEntity[];

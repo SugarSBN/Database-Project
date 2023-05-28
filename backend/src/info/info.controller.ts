@@ -7,28 +7,59 @@ import { UpdateInfoDto } from './dto/update-info.dto';
 export class InfoController {
   constructor(private readonly infoService: InfoService) {}
 
-  @Post()
-  create(@Body() createInfoDto: CreateInfoDto) {
-    return this.infoService.create(createInfoDto);
+  @Get('getproblem')
+  gm1(@Body() createInfoDto: CreateInfoDto) {
+    return this.infoService.getproblem(createInfoDto);
   }
 
-  @Get()
-  findAll() {
-    return this.infoService.findAll();
+  @Get('getallproblem')
+  gmall() {
+    return this.infoService.getallproblem();
+  }
+  @Get('getprobset')
+  gt1(@Body() createInfoDto: CreateInfoDto) {
+    return this.infoService.getprobset(createInfoDto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.infoService.findOne(+id);
+  @Get('getallprobset')
+  gtall() {
+    return this.infoService.getallprobset();
+  }
+  @Get('getpermission')
+  gn1(@Body() createInfoDto: CreateInfoDto) {
+    return this.infoService.getpermission(createInfoDto);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateInfoDto: UpdateInfoDto) {
-    return this.infoService.update(+id, updateInfoDto);
+  @Get('getallpermission')
+  gnall() {
+    return this.infoService.getallpermission();
+  }
+  @Get('getroles')
+  gr1(@Body() createInfoDto: CreateInfoDto) {
+    return this.infoService.getroles(createInfoDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.infoService.remove(+id);
+  @Get('getallroles')
+  grall() {
+    return this.infoService.getallroles();
+  }
+  @Get('getstate')
+  gs1(@Body() createInfoDto: CreateInfoDto) {
+    return this.infoService.getstate(createInfoDto);
+  }
+
+  @Get('getallstate')
+  gsall() {
+    return this.infoService.getallstate();
+  }
+  
+  @Get('getusers')
+  gu1(@Body() createInfoDto: CreateInfoDto) {
+    return this.infoService.getusers(createInfoDto);
+  }
+
+  @Get('getallusers')
+  guall() {
+    return this.infoService.getallusers();
   }
 }
