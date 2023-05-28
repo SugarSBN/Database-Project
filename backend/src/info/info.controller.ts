@@ -6,7 +6,7 @@ import { UpdateInfoDto } from './dto/update-info.dto';
 @Controller('info')
 export class InfoController {
   constructor(private readonly infoService: InfoService) {}
-
+/*
   @Get('getproblem')
   gm1(@Body() createInfoDto: CreateInfoDto) {
     return this.infoService.getproblem(createInfoDto);
@@ -47,12 +47,17 @@ export class InfoController {
   gs1(@Body() createInfoDto: CreateInfoDto) {
     return this.infoService.getstate(createInfoDto);
   }
-
+*/
   @Get('getallstate')
-  gsall() {
-    return this.infoService.getallstate();
+  gsall(@Body() createInfoDto: CreateInfoDto) {
+    return this.infoService.getallstate(createInfoDto);
   }
-  
+
+  @Get('getallhis')
+  ghsall(@Body() createInfoDto: CreateInfoDto) {
+    return this.infoService.getallhistory(createInfoDto);
+  }
+  /*
   @Get('getusers')
   gu1(@Body() createInfoDto: CreateInfoDto) {
     return this.infoService.getusers(createInfoDto);
@@ -62,4 +67,5 @@ export class InfoController {
   guall() {
     return this.infoService.getallusers();
   }
+  */
 }

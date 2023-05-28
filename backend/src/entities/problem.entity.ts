@@ -6,6 +6,16 @@ export class ProblemEntity {
     @PrimaryGeneratedColumn()
     id:number; 
 
-    @Column({ length:50 })
+    @Column()
     name: string;
+
+
+    @Column()
+    title: string;
+
+    @Column('text')
+    text: string;
+
+    @Column()
+    tocomp: string;
 }

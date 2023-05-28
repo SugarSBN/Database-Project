@@ -6,24 +6,18 @@ export class StateEntity {
     @PrimaryGeneratedColumn()
     id:number; 
 
-    @Column({ length:50 })
-    name: string;
+    @Column()
+    user:number
 
-    @Column({ length: 20})
-    uid: string;
-
-    @Column("text")
-    password:string;
-
-    @Column({default:''})
-    email: string;
-
-    @Column('tinyint')
+    @Column()
+    problem:number;
+    // 0 未完成 1 错误 2 完成 3 超时完成
+    @Column({default:0})
     type:number
 
-    @Column({type: 'timestamp', default: () => "CURRENT_TIMESTAMP"}) 
-    btime: Date
+    @Column({default:0})
+    myscore:number
 
-    @Column({type: 'timestamp', default: () => "CURRENT_TIMESTAMP"})
-    etime: Date
+    @Column({type: 'timestamp', default: () => "CURRENT_TIMESTAMP"}) 
+    finishtime: Date
 }

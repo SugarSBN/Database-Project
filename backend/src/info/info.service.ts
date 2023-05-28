@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { CreateInfoDto } from './dto/create-info.dto';
 import { UpdateInfoDto } from './dto/update-info.dto';
-import { DataSource, LessThan } from "typeorm"
+import { DataSource, LessThan, createQueryBuilder } from "typeorm"
 import { StateEntity } from 'src/entities/state.entity';
 import { UsersEntity } from 'src/entities/users.entity';
 import { RolesEntity } from 'src/entities/roles.entity';
 import { ProblemEntity } from 'src/entities/problem.entity';
 import { PermissionEntity } from 'src/entities/permission.entity';
 import { ProbsetEntity } from 'src/entities/probset.entity';
+import { HisEntity } from 'src/entities/history.entity';
 export interface ProL {
   list,
   count: number;
@@ -31,7 +32,8 @@ export class InfoService {
         ProbsetEntity,
         RolesEntity,
         UsersEntity,
-        StateEntity
+        StateEntity,
+        HisEntity
       ],
       synchronize: true,
     })
@@ -57,7 +59,14 @@ export class InfoService {
     if (myDataSource.isInitialized === false)
     await myDataSource.initialize();
     const ue = await myDataSource.getRepository(ProblemEntity).find()
-    return {list:ue, count:ue.length};
+
+    const firstUser = await myDataSource
+    .getRepository(ProblemEntity)
+    .createQueryBuilder("user")
+    .getMany()
+
+
+    return {list:firstUser, count:firstUser.length};
   }
 
   async getpermission(problem: Partial<PermissionEntity>): Promise<PermissionEntity> {
@@ -133,13 +142,52 @@ export class InfoService {
     return user;
   }
   
-  async getallstate(): Promise<ProL> {
-    
+  async getallhistory(problem: Partial<UsersEntity>): Promise<ProL> {
+    const { name } = problem;
     const myDataSource = this.buildDS();
     if (myDataSource.isInitialized === false)
     await myDataSource.initialize();
-    const ue = await myDataSource.getRepository(StateEntity).find()
-    return {list:ue, count:ue.length};
+
+    const {id} = await myDataSource.getRepository(UsersEntity).findOne({
+      where:{
+        name: name,
+      }
+   })
+
+   const user1 = await myDataSource.getRepository(HisEntity).find({
+    where:{
+      belong: id,
+    }
+  })
+
+    return {list:user1, count:user1.length};
+  }
+  
+
+
+  async getallstate(problem: Partial<UsersEntity>): Promise<ProL> {
+    const { name } = problem;
+    const myDataSource = this.buildDS();
+    if (myDataSource.isInitialized === false)
+    await myDataSource.initialize();
+
+    const {id} = await myDataSource.getRepository(UsersEntity).findOne({
+      where:{
+        name: name,
+      }
+   })
+
+
+
+    const user1 = await myDataSource
+    .getRepository(StateEntity)
+    .createQueryBuilder("state")
+    .innerJoinAndSelect(ProblemEntity, "pro", "state.problem = pro.id")
+    .getRawMany()
+    //此处不能用getmany 要用gatrawmany 否则返回空值
+    
+   // return {list:ue, count:ue.length}
+    return {list:user1, count:user1.length};
   }
   
   async getusers(problem: Partial<UsersEntity>): Promise<UsersEntity> {
@@ -163,3 +211,10 @@ export class InfoService {
     return {list:ue, count:ue.length};
   }
 }
+/*
+this.rep.createQueryBuilder('user')
+      .innerJoinAndSelect('user.visits', 'visit')
+      .innerJoinAndMap("user.history", PaymentHistory, 'history', 'visit.id = history.instanceId and history.type = 1')
+      .where('user.id = :userId', { userId: id })
+      .getOne();
+      */

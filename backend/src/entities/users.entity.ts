@@ -29,9 +29,4 @@ export class UsersEntity {
 
     @Column({type: 'timestamp', default: () => "CURRENT_TIMESTAMP"})
     etime: Date
-
-    @OneToOne(type => RolesEntity)
-    
-    @JoinColumn()
-    role: RolesEntity;
 }
