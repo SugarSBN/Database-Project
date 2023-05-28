@@ -12,7 +12,7 @@ export class UsersEntity {
     @Column({ length:50 })
     name: string;
 
-    @Column({ length: 20})
+    @Column({ length: 20, default: ""})
     uid: string;
 
     @Column("text")

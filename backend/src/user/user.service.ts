@@ -1,26 +1,166 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { DataSource, LessThan} from "typeorm"
+import { StateEntity } from 'src/entities/state.entity';
+import { UsersEntity } from 'src/entities/users.entity';
+import { RolesEntity } from 'src/entities/roles.entity';
+import { ProblemEntity } from 'src/entities/problem.entity';
+import { PermissionEntity } from 'src/entities/permission.entity';
+import { ProbsetEntity } from 'src/entities/probset.entity';
+import { HisEntity } from 'src/entities/history.entity';
+export interface ProL {
+  list,
+  count: number,
+  error: number,
+  message: string
+}
 
 @Injectable()
 export class UserService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+
+  buildDS()
+  {
+    const myDataSource = new DataSource({
+      type: "mysql",
+      host: "localhost",
+      port: 3306,
+      username: "root",
+      password: "7788iiuu",
+      database: "main1",
+      entities: [
+        ProblemEntity,
+        PermissionEntity,
+        ProbsetEntity,
+        RolesEntity,
+        UsersEntity,
+        StateEntity,
+        HisEntity
+      ],
+      synchronize: true,
+    })
+    
+    return myDataSource;
   }
 
-  findAll() {
-    return `This action returns all user`;
-  }
+  async build(name:string, password:string, roles:number, nid:string)
+  {
+    const myDataSource = this.buildDS();
+    if (myDataSource.isInitialized === false)
+    await myDataSource.initialize();
+    await myDataSource
+    .createQueryBuilder()
+    .insert()
+    .into(UsersEntity)
+    .values([
+        { name: name, password: password, type: roles , nid: nid},
+    ])
+    .execute()
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
+    const now = await myDataSource.getRepository(UsersEntity).findOne({
+      where:{
+        name: name,
+      }
+   })
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
+   const s = "u" + now.id;
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
-  }
+    const t1 = await myDataSource
+    .createQueryBuilder()
+    .update(UsersEntity)
+    .set(
+        {
+          nid : s,
+        }
+    )
+    .where("name = :name", {name:name})
+    .execute();
+
+
+    
 }
+
+
+  async login(user: Partial<UsersEntity>): Promise<ProL> {
+    const { name } = user;
+    const {password} = user;
+    const myDataSource = this.buildDS();
+    if (myDataSource.isInitialized === false)
+    await myDataSource.initialize();
+
+    const now = await myDataSource.getRepository(UsersEntity).findOne({
+      where:{
+        name: name,
+      }
+   })
+
+   if(!now){
+      return {list:null, count:0,error: 1,message:"用户不存在"};
+   }
+   if(now.password != password)
+   {
+       return {list:null, count:0,error: 2,message:"密码错误"};
+   }
+   if(now.id == 1){
+    
+   return {list:null, count:0,error: 0,message:"超级瞄准已部署"};
+   }
+  // return {list:ue, count:ue.length}
+   return {list:null, count:0,error: 0,message:"登录成功"};
+}
+async register(user: Partial<UsersEntity>): Promise<ProL> {
+  const { name } = user;
+  const {password} = user;
+  const myDataSource = this.buildDS();
+  if (myDataSource.isInitialized === false)
+  await myDataSource.initialize();
+
+  const now = await myDataSource.getRepository(UsersEntity).findOne({
+    where:{
+      name: name,
+    }
+ })
+
+ if(now){
+    return {list:null, count:0,error: 1,message:"用户已存在"};
+ }
+ this.build(name, password,1,"u1");
+// return {list:ue, count:ue.length}
+
+const now1 = await myDataSource.getRepository(UsersEntity).findOne({
+  where:{
+    name: name,
+  }
+})
+
+ return {list:now1, count:1,error: 0,message:"注册成功"};
+}
+
+
+async logout(user: Partial<UsersEntity>): Promise<ProL> {
+  const { name } = user;
+  const myDataSource = this.buildDS();
+  if (myDataSource.isInitialized === false)
+  await myDataSource.initialize();
+
+  const now = await myDataSource.getRepository(UsersEntity).findOne({
+    where:{
+      name: name,
+    }
+ })
+
+ if(!now){
+    return {list:null, count:0,error: 1,message:"用户不存在"};
+ }
+// return {list:ue, count:ue.length}
+ return {list:null, count:0,error: 0,message:"登出成功"};
+}
+
+}
+/*
+this.rep.createQueryBuilder('user')
+      .innerJoinAndSelect('user.visits', 'visit')
+      .innerJoinAndMap("user.history", PaymentHistory, 'history', 'visit.id = history.instanceId and history.type = 1')
+      .where('user.id = :userId', { userId: id })
+      .getOne();
+      */

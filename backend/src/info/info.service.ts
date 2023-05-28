@@ -11,7 +11,9 @@ import { ProbsetEntity } from 'src/entities/probset.entity';
 import { HisEntity } from 'src/entities/history.entity';
 export interface ProL {
   list,
-  count: number;
+  count: number,
+  error: number,
+  message:string,
 }
 
 @Injectable()
@@ -40,7 +42,7 @@ export class InfoService {
     
     return myDataSource;
   }
-
+/*
   async getproblem(problem: Partial<ProblemEntity>): Promise<ProblemEntity> {
     const { id } = problem;
     const myDataSource = this.buildDS();
@@ -141,7 +143,7 @@ export class InfoService {
     })
     return user;
   }
-  
+  */
   async getallhistory(problem: Partial<UsersEntity>): Promise<ProL> {
     const { name } = problem;
     const myDataSource = this.buildDS();
@@ -160,7 +162,7 @@ export class InfoService {
     }
   })
 
-    return {list:user1, count:user1.length};
+    return {list:user1, count:user1.length, error: 0, message:null};
   }
   
 
@@ -187,9 +189,9 @@ export class InfoService {
     //此处不能用getmany 要用gatrawmany 否则返回空值
     
    // return {list:ue, count:ue.length}
-    return {list:user1, count:user1.length};
+    return {list:user1, count:user1.length,error: 0,message:null};
   }
-  
+  /*
   async getusers(problem: Partial<UsersEntity>): Promise<UsersEntity> {
     const { id } = problem;
     const myDataSource = this.buildDS();
@@ -210,6 +212,7 @@ export class InfoService {
     const ue = await myDataSource.getRepository(UsersEntity).find()
     return {list:ue, count:ue.length};
   }
+  */
 }
 /*
 this.rep.createQueryBuilder('user')
