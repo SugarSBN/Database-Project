@@ -15,6 +15,9 @@ export class ProblemEntity {
 
     @Column('text')
     text: string;
+    
+    @Column()
+    becomp:string;
 
     @Column()
     tocomp: string;

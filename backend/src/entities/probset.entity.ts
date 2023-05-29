@@ -9,6 +9,9 @@ export class ProbsetEntity {
     @Column()
     rid: number;
 
+
+    @Column()
+    pid:number;
     @Column({type: 'timestamp', default: () => "CURRENT_TIMESTAMP"}) 
     btime: Date;
 

@@ -106,7 +106,7 @@ export class SubmitService {
       connection.query(sql, 
       (error,results, fields) => { 
         connection.end(),
-          resolve({error, results});
+          resolve({error, results, fields});
       });
   })
 /*
@@ -127,7 +127,7 @@ export class SubmitService {
 
   async check(a: CreateSubmitDto){
     const name = a.name;
-    const id = a.proidnumber;
+    const pid = a.proidnumber;
     const myDataSource = this.buildDS();
     if (myDataSource.isInitialized === false)
     await myDataSource.initialize();
@@ -142,9 +142,22 @@ export class SubmitService {
     const now1 = await myDataSource.getRepository(StateEntity).findOne({
       where:{
         user: id1,
-        problem: id,
+        problem: pid,
       }
    })
+
+   const problemid = now1.problem;
+
+   const problemnow = await myDataSource.getRepository(ProblemEntity).findOne({
+    where:{
+      id: problemid,
+    }
+ })
+ 
+  const sb = problemnow.becomp;
+  const se = problemnow.tocomp;
+  const nidd = now.nid;
+
 
   }
 }

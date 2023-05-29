@@ -94,11 +94,39 @@ export class UserService {
 
     const s2 = "CREATE USER '" + s + "'@'host' IDENTIFIED WITH mysql_native_password BY '7788iiuu';";
     const sname = "'" + s + "'@'host'";
+    
     connection.query(s2, function (error, results, fields) {
       if (error) throw error;
       console.log('The solution is: ', results);
     });
 
+    connection.query("create table " + s + ".`pub.teacher` select * from main1.`pub.teacher`;", function (error, results, fields) {
+      if (error) throw error;
+      console.log('The solution is: ', results);
+    });
+
+
+    connection.query("create table " + s + ".`pub.teacher_course` select* from main1.`pub.teacher_course`;", function (error, results, fields) {
+      if (error) throw error;
+      console.log('The solution is: ', results);
+    });
+
+
+    const sp = await myDataSource.getRepository(ProbsetEntity).find({
+      where:{
+        rid: roles,
+      }
+    }
+    )
+    
+     for (var i = 0; i < sp.length; i++) { 
+      const tmp = new StateEntity();
+      tmp.myscore = 0;
+      tmp.problem = sp[i].pid;
+      tmp.finishtime = sp[i].etime;
+      tmp.user = now.id;
+      await myDataSource.manager.save(tmp);
+    }
 
     connection.end();
   }

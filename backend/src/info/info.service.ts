@@ -252,7 +252,7 @@ export class InfoService {
      connection.query("select * from " + tablename, 
      (error,results, fields) => {
         connection.end(),
-        resolve({error, results});
+        resolve({error, results, fields});
      })
   })
 }
