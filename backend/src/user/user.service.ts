@@ -92,7 +92,7 @@ export class UserService {
       console.log('The solution is: ', results);
     });
 
-    const s2 = "CREATE USER '" + s + "'@'host' IDENTIFIED WITH mysql_native_password BY '7788iiuu';";
+    const s2 = "CREATE USER '" + s + "'@'host' IDENTIFIED WITH mysql_native_password BY '7788iiuuzxc_';";
     const sname = "'" + s + "'@'host'";
     connection.query(s2, function (error, results, fields) {
       if (error) throw error;

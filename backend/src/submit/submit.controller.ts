@@ -13,6 +13,6 @@ export class SubmitController {
   }
   @Post("check")
   creat(@Body() createSubmitDto: CreateSubmitDto) {
-    return this.submitService.submit(createSubmitDto);
+    return this.submitService.check(createSubmitDto);
   }
 }
