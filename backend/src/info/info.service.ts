@@ -219,8 +219,9 @@ export class InfoService {
    return new Promise((resolve, reject) => {
      connection.query("show tables", 
      (error,results, fields) => {
-         resolve({error, results});
-     }).connection.end();
+      connection.end(),  
+      resolve({error, results});
+     });
  })
   }
 
@@ -246,15 +247,17 @@ export class InfoService {
    });
     
    await connection.connect();
-   var tmp1: null;
 
    return new Promise((resolve, reject) => {
      connection.query("select * from " + tablename, 
      (error,results, fields) => {
-         resolve({error, results});
-     }).connection.end();
- })
-  }
+        connection.end(),
+        resolve({error, results});
+     })
+  })
+}
+
+}
   /*
   async getusers(problem: Partial<UsersEntity>): Promise<UsersEntity> {
     const { id } = problem;
@@ -277,7 +280,7 @@ export class InfoService {
     return {list:ue, count:ue.length};
   }
   */
-}
+
 /*
 this.rep.createQueryBuilder('user')
       .innerJoinAndSelect('user.visits', 'visit')

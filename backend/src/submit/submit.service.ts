@@ -104,9 +104,10 @@ export class SubmitService {
 
     return new Promise((resolve, reject) => {
       connection.query(sql, 
-      (error,results, fields) => {
+      (error,results, fields) => { 
+        connection.end(),
           resolve({error, results});
-      }).connection.end();
+      });
   })
 /*
    connection.query(sql, function (error, results, fields) {
