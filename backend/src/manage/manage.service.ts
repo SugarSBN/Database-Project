@@ -65,7 +65,7 @@ export class ManageService {
   }
 
 
-  async addproblem(name, text, title, tocomp, becomp)
+  async addproblem(name, title,text, tocomp, becomp)
   {
     const myDataSource = this.buildDS();
     if (myDataSource.isInitialized === false)
@@ -106,34 +106,51 @@ export class ManageService {
 
     await this.addproblem("题目三", "1-5", "给表test1_course插入如下2行数据。\n注意空值的插入使用null\n课程号 课程名 先行课程号 学分\n300001 数据结构 2300002 数据库 300001 2.5", "base1-5", "test1_course")
     
+    const nowt1 = await myDataSource.getRepository(ProblemEntity).findOne({
+      where:{
+        title:"1-1",
+      }
+    })
+    const nowt2 = await myDataSource.getRepository(ProblemEntity).findOne({
+      where:{
+        title:"1-2",
+      }
+    })
+    
+    const nowt5 = await myDataSource.getRepository(ProblemEntity).findOne({
+      where:{
+        title:"1-5",
+      }
+    })
+    
     const d = new ProbsetEntity();
     d.rid = 1;
     d.score = 5;
-    d.pid  = 1;
+    d.pid  = nowt1.id;
     await myDataSource.manager.save(d);
 
     const d1 = new ProbsetEntity();
     d1.rid = 1;
     d1.score = 5;
-    d1.pid  = 2;
+    d1.pid  = nowt2.id;
     await myDataSource.manager.save(d1);
 
     const d2 = new ProbsetEntity();
     d2.rid = 1;
     d2.score = 10;
-    d2.pid  = 3;
+    d2.pid  = nowt5.id;
     await myDataSource.manager.save(d2);
 
     const d3 = new ProbsetEntity();
     d3.rid = 2;
     d3.score = 5;
-    d3.pid  = 1;
+    d3.pid  = nowt1.id;
     await myDataSource.manager.save(d3);
 
     const d4 = new ProbsetEntity();
     d4.rid = 2;
     d4.score = 5;
-    d4.pid  = 2;
+    d4.pid  = nowt5.id;
     await myDataSource.manager.save(d4);
 
     
