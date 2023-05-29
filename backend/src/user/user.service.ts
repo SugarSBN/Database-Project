@@ -76,9 +76,32 @@ export class UserService {
     .where("name = :name", {name:name})
     .execute();
 
+    var mysql      = require('mysql');
+    var connection = mysql.createConnection({
+      host     : 'localhost',
+      user     : 'root',
+      password : '7788iiuu'
+    });
+     
+    connection.connect();
+     
+    const s1 = "create database " + s + ";";
 
-    
-}
+    connection.query(s1, function (error, results, fields) {
+      if (error) throw error;
+      console.log('The solution is: ', results);
+    });
+
+    const s2 = "CREATE USER '" + s + "'@'host' IDENTIFIED WITH mysql_native_password BY '7788iiuu';";
+    const sname = "'" + s + "'@'host'";
+    connection.query(s2, function (error, results, fields) {
+      if (error) throw error;
+      console.log('The solution is: ', results);
+    });
+
+
+    connection.end();
+  }
 
 
   async login(user: Partial<UsersEntity>): Promise<ProL> {

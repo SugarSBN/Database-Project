@@ -7,28 +7,12 @@ import { UpdateSubmitDto } from './dto/update-submit.dto';
 export class SubmitController {
   constructor(private readonly submitService: SubmitService) {}
 
-  @Post()
+  @Post("submit")
   create(@Body() createSubmitDto: CreateSubmitDto) {
-    return this.submitService.create(createSubmitDto);
+    return this.submitService.submit(createSubmitDto);
   }
-
-  @Get()
-  findAll() {
-    return this.submitService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.submitService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSubmitDto: UpdateSubmitDto) {
-    return this.submitService.update(+id, updateSubmitDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.submitService.remove(+id);
+  @Post("check")
+  creat(@Body() createSubmitDto: CreateSubmitDto) {
+    return this.submitService.submit(createSubmitDto);
   }
 }

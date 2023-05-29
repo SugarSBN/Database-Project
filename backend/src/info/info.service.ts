@@ -191,6 +191,58 @@ export class InfoService {
    // return {list:ue, count:ue.length}
     return {list:user1, count:user1.length,error: 0,message:null};
   }
+
+
+  async getalltable(problem: Partial<UsersEntity>): Promise<ProL> {
+    const { name } = problem;
+    const myDataSource = this.buildDS();
+    if (myDataSource.isInitialized === false)
+    await myDataSource.initialize();
+
+    const {id} = await myDataSource.getRepository(UsersEntity).findOne({
+      where:{
+        name: name,
+      }
+   })
+
+
+
+    const user1 = await myDataSource
+    .getRepository(StateEntity)
+    .createQueryBuilder("state")
+    .innerJoinAndSelect(ProblemEntity, "pro", "state.problem = pro.id")
+    .getRawMany()
+    //此处不能用getmany 要用gatrawmany 否则返回空值
+    
+   // return {list:ue, count:ue.length}
+    return {list:user1, count:user1.length,error: 0,message:null};
+  }
+
+  async gettable(problem: CreateInfoDto): Promise<ProL> {
+    const  name  = problem.name;
+    const tablename = problem.tablename;
+    const myDataSource = this.buildDS();
+    if (myDataSource.isInitialized === false)
+    await myDataSource.initialize();
+
+    const {id} = await myDataSource.getRepository(UsersEntity).findOne({
+      where:{
+        name: name,
+      }
+   })
+
+
+
+    const user1 = await myDataSource
+    .getRepository(StateEntity)
+    .createQueryBuilder("state")
+    .innerJoinAndSelect(ProblemEntity, "pro", "state.problem = pro.id")
+    .getRawMany()
+    //此处不能用getmany 要用gatrawmany 否则返回空值
+    
+   // return {list:ue, count:ue.length}
+    return {list:user1, count:user1.length,error: 0,message:null};
+  }
   /*
   async getusers(problem: Partial<UsersEntity>): Promise<UsersEntity> {
     const { id } = problem;

@@ -7,28 +7,8 @@ import { UpdateManageDto } from './dto/update-manage.dto';
 export class ManageController {
   constructor(private readonly manageService: ManageService) {}
 
-  @Post()
+  @Post("init")
   create(@Body() createManageDto: CreateManageDto) {
-    return this.manageService.create(createManageDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.manageService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.manageService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateManageDto: UpdateManageDto) {
-    return this.manageService.update(+id, updateManageDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.manageService.remove(+id);
+    return this.manageService.init(createManageDto);
   }
 }

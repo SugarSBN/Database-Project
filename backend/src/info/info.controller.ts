@@ -57,6 +57,17 @@ export class InfoController {
   ghsall(@Body() createInfoDto: CreateInfoDto) {
     return this.infoService.getallhistory(createInfoDto);
   }
+
+  @Get('getalltable')
+  ghsalsl(@Body() createInfoDto: CreateInfoDto) {
+    return this.infoService.getalltable(createInfoDto);
+  }
+
+  @Get('gettable')
+  ghsal3sl(@Body() createInfoDto: CreateInfoDto) {
+    return this.infoService.gettable(createInfoDto);
+  }
+
   /*
   @Get('getusers')
   gu1(@Body() createInfoDto: CreateInfoDto) {

@@ -1,1 +1,5 @@
-export class CreateSubmitDto {}
+export class CreateSubmitDto {
+    sql:string;
+    name:string;
+    proidnumber;
+}
