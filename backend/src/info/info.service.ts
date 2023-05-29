@@ -220,7 +220,7 @@ export class InfoService {
      connection.query("show tables", 
      (error,results, fields) => {
          resolve({error, results});
-     })
+     }).connection.end();
  })
   }
 
@@ -252,7 +252,7 @@ export class InfoService {
      connection.query("select * from " + tablename, 
      (error,results, fields) => {
          resolve({error, results});
-     })
+     }).connection.end();
  })
   }
   /*

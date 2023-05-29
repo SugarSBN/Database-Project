@@ -106,7 +106,7 @@ export class SubmitService {
       connection.query(sql, 
       (error,results, fields) => {
           resolve({error, results});
-      })
+      }).connection.end();
   })
 /*
    connection.query(sql, function (error, results, fields) {
@@ -144,6 +144,6 @@ export class SubmitService {
         problem: id,
       }
    })
-   
+
   }
 }
