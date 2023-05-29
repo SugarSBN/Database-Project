@@ -19,6 +19,7 @@
   
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-btn color="" @click="register">注册</v-btn>
           <v-btn color="primary" @click="login">登录</v-btn>
           <v-btn color="secondary" @click="cancel">取消</v-btn>
         </v-card-actions>
@@ -27,6 +28,8 @@
 </template>
 
 <script>
+  import axios from 'axios';
+
     export default {
     data() {
         return {
@@ -37,10 +40,30 @@
     },
     methods: {
         login() {
-            this.$emit('login', true);
+            this.$emit('login', this.username, this.password);
         },
         cancel(){
             this.$emit('login', false);
+        },
+        register(){
+          var parameter = {
+            name : this.username,
+            password : this.password
+          }
+          axios({
+            url: 'http://8.130.116.40:9080/user/register',
+            method: 'post',
+            data: JSON.stringify(parameter),
+            headers: {
+              'Content-Type': 'application/json'
+            },
+          }).then(response =>{
+            if (response.data['message'] == '用户已存在') {
+              alert('用户已存在');
+            } else {
+              alert('注册成功');
+            }
+          })
         }
     }
     };

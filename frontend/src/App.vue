@@ -5,6 +5,7 @@
  * @Github: https://github.com/SugarSBN
  * これなに、これなに、これない、これなに、これなに、これなに、ねこ！ヾ(*´∀｀*)ﾉ
 -->
+// "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" –disable-web-security --user-data-dir=C:\Program Files (x86)\Microsoft\Temp
 <template>
   <div id="app">
     <TitleBar :title="pageTitle">
@@ -25,8 +26,9 @@
             <div class="overflow-auto">
               <!-- Task Table -->
               <EasyDataTable 
-                      :headers="taskheaders" 
-                      :items="tasks" 
+                      :headers="taskHeader" 
+                      :items="taskInfo" 
+                      @click-row="handleTaskTableRowClick"
                       rows-per-page="5"
                       show-index/>
             </div>
@@ -48,20 +50,19 @@
           <!-- 常用表及视图 -->
           <v-col cols="4" class="pa-0" style="border: 0.5px solid #6d89b2">
             <div class="overflow-auto">
-              <!-- Task Table -->
               <EasyDataTable 
-                      :headers="tableheaders" 
-                      :items="tables" 
+                      :headers="tableHeader" 
+                      :items="tableInfo" 
+                      @click-row="handleTableViewRowClick"
                       rows-per-page="5"/>
             </div>
           </v-col>
           <!-- 历史sql语句 -->
           <v-col cols="4" class="pa-0" style="border: 0.5px solid #6d89b2">
             <div class="overflow-auto">
-              <!-- Task Table -->
               <EasyDataTable 
-                      :headers="sqlheaders" 
-                      :items="sqls" 
+                      :headers="sqlHeader" 
+                      :items="sqlInfo" 
                       rows-per-page="5"/>
             </div>
           </v-col>
@@ -71,22 +72,23 @@
               <h2 style="font-size: 15px">运行结果</h2>
               <v-textarea
                   readonly
-                  :value="result"
+                  :value="executionResult"
+                  :style="textareaStyle"
                   rows= "7"/>
 
             </div>
           </v-col>
           <v-col cols="1" class="pa-0" style="border: 0.5px solid #6d89b2">
             <!--按钮-->
-            <v-btn color="#e9e7ef" width="48%" height="20%" style="margin-right: 5px; font-size: 20px">执行</v-btn>
-            <v-btn color="#e9e7ef" width="48%" height="20%" style="margin-bottom: 5px; font-size: 20px">回滚</v-btn>
+            <v-btn color="#e9e7ef" width="48%" height="20%" style="margin-right: 5px; font-size: 20px" @click="executeSQL">执行</v-btn>
+            <!--<v-btn color="#e9e7ef" width="48%" height="20%" style="margin-bottom: 5px; font-size: 20px">回滚</v-btn>-->
             <br><br/>
             <img src="./doggy.gif" alter=""/>
           </v-col>
         </v-row>
 
         <v-row style="border: 0.5px solid #6d89b2">
-          <v-col cols="6" class="pa-0" style="border: 0.5px solid #6d89b2">
+          <v-col cols="4" class="pa-0" style="border: 0.5px solid #6d89b2">
             <div>
               <!-- Table content -->
               <div class="overflow-auto">
@@ -94,13 +96,27 @@
                   <h2 style="font-size: 15px">表信息</h2>
                 </header>
                 <EasyDataTable 
-                        :headers="tableContentHeaders" 
-                        :items="tableContents" 
+                        :headers="tableInfoHeader" 
+                        :items="tableInfoInfo" 
                         rows-per-page="8"/>
               </div>
             </div>
           </v-col>
-          <v-col cols="6" class="pa-0" style="border: 0.5px solid #6d89b2">
+          <v-col cols="4" class="pa-0" style="border: 0.5px solid #6d89b2">
+            <div>
+              <!-- Table content -->
+              <div class="overflow-auto">
+                <header>
+                  <h2 style="font-size: 15px">表内容</h2>
+                </header>
+                <EasyDataTable 
+                        :headers="tableContentHeader" 
+                        :items="tableContentInfo" 
+                        rows-per-page="8"/>
+              </div>
+            </div>
+          </v-col>
+          <v-col cols="4" class="pa-0" style="border: 0.5px solid #6d89b2">
             <div>
               <!-- Code Editor -->
               <div class="editor-container">
@@ -117,6 +133,7 @@
 import TitleBar from "./components/TitleBar.vue";
 import LoginDialog from "./components/LoginDialogue.vue";
 import ace from 'ace-builds/src-noconflict/ace'
+import axios from 'axios'
 
 export default {
   name: "App",
@@ -125,19 +142,223 @@ export default {
     LoginDialog
   },
   methods: {
+    // 执行SQL语句
+    executeSQL(){
+      const editor = ace.edit(this.$refs.editor)
+      const sql = editor.getValue()
+      var parameter = {
+        name : this.$store.state.user,
+        sql: sql
+      }
+      axios({
+        url: 'http://8.130.116.40:9080/submit/submit',
+        method: 'post',
+        data: JSON.stringify(parameter),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      }).then(response =>{
+        const data = response.data
+        if (data['error'] == null) {
+          if (data['results'] instanceof Array){
+            var jsons = data['results'][0];
+            var header = [];
+            for (let key in jsons){
+              header.push({text : key, value : key});
+            }
+            this.tableContentHeader = header;
+            this.tableContentInfo = data['results'];
+          }
+          this.executionResult = "执行成功！";
+          this.textareaStyle = {color : "#00ff00" };
+        } else {
+          this.executionResult = data['error']['sqlMessage'];
+          this.textareaStyle = {color : "#ff0000" };
+        }
+
+        this.refreshHistory();
+        this.refreshTables();
+      }).catch(error => {
+        console.log(error)
+      })
+    },
+    // 刷新历史SQL语句
+    refreshHistory(){
+      var parameter = {
+        name : this.$store.state.user
+      }
+      axios({
+        url: 'http://8.130.116.40:9080/info/getallhis',
+        method: 'get',
+        data: JSON.stringify(parameter),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      }).then(response =>{
+        const data = response.data['list']
+        var tmp = [];
+        for (let i = data.length - 1;i >= 0;i--){
+          if (data[i]['text'] != 'Show Tables;;;;;;;;;'){
+            tmp.push({text: data[i]['text']});
+          }
+        }
+        this.sqlInfo = tmp;
+      }).catch(error => {
+        console.log(error)
+      })
+    },
+    
+    // 打开登录界面
     openLoginDialogue() {
       this.dialog = true;
     },
-    handleLogin(success){
-      console.log(success);
+
+    // 登录见面点击登录按钮
+    handleLogin(username, password){
       this.dialog = false;
-      const user = { name: "Jack", age: 18 };
-      this.$store.commit("login", user);
-      console.log(this.$store.state.user);
+      var parameter = {
+        name : username,
+        password : password
+      }
+      axios({
+        url: 'http://8.130.116.40:9080/user/login',
+        method: 'post',
+        data: JSON.stringify(parameter),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      }).then(response =>{
+        alert(response.data['message']);
+        if (response.data['message'] == '登录成功') {
+          this.nameLabel = username;
+          this.$store.commit("login", username); 
+          this.refreshTaskTable();
+          this.refreshTables();
+        }
+      })
+      // this.$store.commit("login", user);
+      // console.log(this.$store.state.user);
     },
+    
+    refreshTables(){
+      var parameter = {
+        name : this.$store.state.user,
+        sql: "Show Tables;;;;;;;;;"
+      }
+      axios({
+        url: 'http://8.130.116.40:9080/submit/submit',
+        method: 'post',
+        data: JSON.stringify(parameter),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      }).then(response =>{
+        const data = response.data['results']
+        console.log(data)
+        var key = Object.keys(data[0])[0]
+        var tmp = [];
+        for (let i = 0;i < data.length;i++){
+          tmp.push({name : data[i][key]});
+        }
+        console.log(tmp)
+        this.tableInfo = tmp;
+
+      }).catch(error => {
+        console.log(error)
+      })
+    },
+    
+    refreshTaskTable(){
+      var parameter = {
+        name : this.$store.state.user
+      }
+      axios({
+        url: 'http://8.130.116.40:9080/info/getallstate',
+        method: 'get',
+        data: JSON.stringify(parameter),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      }).then(response =>{
+        var taskTables = response.data['list'];
+        var tmp = [];
+        for (let i = 0;i < taskTables.length;i++){
+          tmp.push({
+            task: taskTables[i]['pro_name'],
+            ddl: taskTables[i]['state_finishtime'],
+            result: taskTables[i]['state_myscore'],
+            submit: ""
+          });
+        }
+        this.taskInfo = tmp;
+      })
+    },
+
+    handleTaskTableRowClick(rowData){
+      var pro_name = rowData['task'];
+      var parameter = {
+        name : this.$store.state.user
+      }
+      axios({
+        url: 'http://8.130.116.40:9080/info/getallstate',
+        method: 'get',
+        data: JSON.stringify(parameter),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      }).then(response =>{
+        var taskTables = response.data['list'];
+        for (let i = 0;i < taskTables.length;i++){
+          if (taskTables[i]['pro_name'] == pro_name){
+            this.taskContent = taskTables[i]['pro_text'];
+            break;
+          }
+        }
+      })
+    },
+
+    handleTableViewRowClick(rowData){
+      var parameter = {
+        name : this.$store.state.user,
+        tablename : rowData['name']
+      }
+      console.log(parameter);
+      axios({
+        url: 'http://8.130.116.40:9080/info/gettable',
+        method: 'get',
+        data: JSON.stringify(parameter),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      }).then(response =>{
+        var data = response.data;
+        console.log(data)
+      })
+    },
+
+    // 登出按钮
     logout(){
       this.$store.commit("logout");
-    }
+      this.taskContent = "";
+      
+      this.taskInfo = [];
+      this.tableInfo = [];
+
+      this.tableInfoHeader = [];
+      this.tableInfoInfo = [];
+      
+      this.tableContentHeader = [];
+      this.tableContentInfo = [];
+
+      this.sqlInfo = [];
+
+      this.executionResult = "";
+      
+      ace.edit(this.$refs.editor).setValue('-- 请输入sql语句...');
+
+      this.nameLabel = "未登入"
+    },
+
   },
   mounted() {
     const editor = ace.edit(this.$refs.editor)
@@ -148,145 +369,42 @@ export default {
   data() {
     return {
       pageTitle: "🏵️数据库实验系统",
-      nameLabel: "test",
+      nameLabel: "未登入",
       dialog: false,
-      taskContent: "这是第一行文本\n这是第二行文本\n这是第二行文本\n这是第二行文本\n这是第二行文本\n这是第二行文本\n这是第二行文本\n这是第二行文本\n这是第二行文本\n这是第二行文本\n这是第二行文本\n这是第二行文本\n这是第二行文本\n这是第二行文本",
-      taskheaders: [
+      taskContent: "",
+      executionResult : "",
+      taskHeader: [
         { text: "任务", value: "task" },
         { text: "要求完成时间", value: "ddl", sortable: true },
-        { text: "分值", value: "score", sortable: true },
-        { text: "实际完成时间", value: "time", sortable: true },
         { text: "结果", value: "result", sortable: true },
         { text: "交卷验证", value: "submit", sortable: true }
       ],
-      tasks: [
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
-        { "task" : "1", "ddl" : "2", "score" : "3", "time" : "4", "result" : "5", "submit" : "6"},
+      taskInfo: [
       ],
-      tableheaders: [
+      tableHeader: [
         { text: "常用表及视图", value: "name"}
       ],
-      tables : [
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
-        {"name" : "1"},
+      tableInfo : [
       ],
 
-      sqlheaders: [
-        { text: "历史SQL语句", value: "name"}
+      sqlHeader: [
+        { text: "历史SQL语句", value: "text"}
       ],
-      sqls : [
-        {"name" : "1"},
+      sqlInfo : [
+        {text : "1"},
       ],
 
-      tableContentHeaders: [
+      tableInfoHeader: [
         { text: "表名", value: "name"},
         { text: "字段", value: "attribute"},
         { text: "类型", value: "type"}
       ],
-      tableContents : [
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
-        {"name" : "1", "attribute" : "2", "type" : "2"},
+      tableInfoInfo : [
       ],
-      
+      tableContentHeader : [
+      ],
+      tableContentInfo : [
+      ],
 
     };
   },
