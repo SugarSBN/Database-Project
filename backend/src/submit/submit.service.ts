@@ -86,10 +86,36 @@ export class SubmitService {
     connection.connect();
     
     connection.query(sql, function (error, results, fields) {
-      if (error) throw error;
+      if (error) return {error1: 1, massage:error};
       console.log('The solution is: ', results);
     });
     connection.end();
     return 'This action adds a new submit';
+  }
+
+  async check(a: CreateSubmitDto){
+    const name = a.name;
+    const id = a.proidnumber;
+    const myDataSource = this.buildDS();
+    if (myDataSource.isInitialized === false)
+    await myDataSource.initialize();
+
+    const now = await myDataSource.getRepository(UsersEntity).findOne({
+      where:{
+        name: name,
+      }
+   })
+   const id1 = now.id;
+
+    const now1 = await myDataSource.getRepository(StateEntity).findOne({
+      where:{
+        user: id1,
+        problem: id,
+      }
+   })
+
+
+  
+
   }
 }
