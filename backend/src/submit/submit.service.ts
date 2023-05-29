@@ -56,6 +56,22 @@ export class SubmitService {
   {
   }
 
+  LookupMessage = function(sql,callback) {
+    this.CreateNewConnection();
+    let connection = this.connection;
+    connection.connect();
+    connection.query(sql, function (err, result) {
+        if (err) {
+            console.log('[SELECT ERROR]：', err.message);
+        }
+        this.str = result;
+        //使用异步回调函数传出内部值
+        callback(this.str);
+        connection.end();
+    })
+}
+
+
   async submit(a: CreateSubmitDto) {
     const sql = a.sql;
     const name = a.name;
@@ -83,14 +99,29 @@ export class SubmitService {
       database : now.nid
     });
      
-    connection.connect();
-    
-    connection.query(sql, function (error, results, fields) {
-      if (error) return {error1: 1, massage:error};
-      console.log('The solution is: ', results);
+    await connection.connect();
+    var tmp1: null;
+
+    return new Promise((resolve, reject) => {
+      connection.query(sql, 
+      (error,results, fields) => {
+          resolve({error, results});
+      })
+  })
+/*
+   connection.query(sql, function (error, results, fields) {
+      if (error) {
+        
+        console.log(error);
+        tmp1 = error;
+          console.log(error);
+      } 
+        console.log('The solution is: ', results);
     });
-    connection.end();
-    return 'This action adds a new submit';
+    await connection.end();
+    
+    if(tmp1) return {error:1, message:tmp1};
+    else return {error: 0 , message: 'This action adds a new submit'};*/
   }
 
   async check(a: CreateSubmitDto){
