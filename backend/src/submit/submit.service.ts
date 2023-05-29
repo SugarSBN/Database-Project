@@ -144,9 +144,6 @@ export class SubmitService {
         problem: id,
       }
    })
-
-
-  
-
+   
   }
 }
