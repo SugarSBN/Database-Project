@@ -38,19 +38,26 @@ export class SubmitService {
   }
  
   Equal(obj1, obj2) {
-    const keys1 = Object.keys(obj1);
-    const keys2 = Object.keys(obj2);
-    if (keys1.length !== keys2.length) {
-      return {error:1, message:"与答案相差" + (keys2.length - keys1.length) + "行"};
+    if(!obj2) return {error:1, message:"表不存在"}
+    if(obj1.length != obj2.length) return  {error:1, message:"行数缺少" + (obj1.length - obj2.length) + "行"};
+    const keys1 = Object.keys(obj1[0]);
+    const keys2 = Object.keys(obj2[0]);
+    if (JSON.stringify(keys1) !== JSON.stringify(keys1)) {
+      return {error:1, message:"列信息不同"};
     }
+    console.log(keys1, keys2)
+    if(JSON.stringify(obj1) !== JSON.stringify(obj2)) return {error:1, message: "答案不同"}
+    return {error:0, message:"回答正确"};
+    return  {error:JSON.stringify(obj1) == JSON.stringify(obj2)};
     var cnt = 0;
     for (let i = 0; i < keys1.length; i++) {
       const key = keys1[i];
-      if (obj1[key] !== obj2[key]) {
-        return false;
+      if (obj1[key] != obj2[key]) {
+        cnt++;
       }
     }
-    return true;
+    if(cnt > 0) return {error:1, message:"与答案有" + cnt + "行不同"};
+    return {error:0, message:"回答正确"};
   }
   compare(database1:string, database2:string, table1:string, table2:string)
   {
@@ -125,6 +132,16 @@ export class SubmitService {
     else return {error: 0 , message: 'This action adds a new submit'};*/
   }
 
+  async gett(sql, connection)
+  {
+    return new Promise((resolve, reject) => {
+      connection.query(sql,function(error, results, fields) {
+        console.log(sql);
+        resolve(results);
+      })
+    })
+  }
+
   async check(a: CreateSubmitDto){
     const name = a.name;
     const pid = a.proidnumber;
@@ -146,18 +163,72 @@ export class SubmitService {
       }
    })
 
-   const problemid = now1.problem;
 
    const problemnow = await myDataSource.getRepository(ProblemEntity).findOne({
     where:{
-      id: problemid,
+      id: pid,
     }
  })
  
+ const problemsetnow = await myDataSource.getRepository(ProbsetEntity).findOne({
+  where:{
+    pid: problemnow.id,
+    rid: now.type
+  }
+})
+
   const sb = problemnow.becomp;
   const se = problemnow.tocomp;
-  const nidd = now.nid;
+  const nid = now.nid;
+
+  var mysql      = require('mysql');
+  var connection = mysql.createConnection({
+    host     : 'localhost',
+    user     : 'root',
+    password : '7788iiuu',
+    database : 'main1'
+  });
+   
+  await connection.connect();
+  var tmp1: null;
+  var tmp2: null;
 
 
+  
+    
+  const p =  await this.gett("select *  from `" + se + "`;", connection);
+ 
+console.log(nid);
+    var connection2 = mysql.createConnection({
+      host     : 'localhost',
+      user     : 'root',
+      password : '7788iiuu',
+      database : nid
+    });
+
+    await connection2.connect();
+
+    
+  const q = await this.gett("select * from `" + sb + "`;", connection2)
+  //  console.log(p,q);
+    const t = this.Equal(p,q);
+
+    if(t.error){
+      await myDataSource
+      .createQueryBuilder()
+      .update(StateEntity)
+      .set({ myscore: 0, type: 1 })
+      .where("id = :id", { id: now1.id })
+      .execute()
+    }
+    else{
+      await myDataSource
+      .createQueryBuilder()
+      .update(StateEntity)
+      .set({ myscore: problemsetnow.score, type: 2 })
+      .where("id = :id", { id: now1.id })
+      .execute()
+    }
+    return this.Equal(p,q);
   }
 }
