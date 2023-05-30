@@ -45,6 +45,7 @@ export class SubmitService {
       if(obj1.length > obj2.length )return  {error:1, message:"行数缺少" + (obj1.length - obj2.length) + "行"};
       else return  {error:1, message:"行数多了" + (obj2.length - obj1.length ) + "行"};
     } 
+    if(obj1.length == obj2.length && obj1.length == 0) return {error:0, message:"回答正确"};
     const keys1 = Object.keys(obj1[0]);
     const keys2 = Object.keys(obj2[0]);
     if (JSON.stringify(keys1) !== JSON.stringify(keys1)) {
