@@ -38,8 +38,13 @@ export class SubmitService {
   }
  
   Equal(obj1, obj2) {
-    if(!obj2) return {error:1, message:"表不存在"}
-    if(obj1.length != obj2.length) return  {error:1, message:"行数缺少" + (obj1.length - obj2.length) + "行"};
+    if(!obj1 && obj2) return {error:1, message: "答案不同"}
+    if(!obj1 && !obj2) return {error:0, message:"回答正确"}
+    if(!obj2 || !obj1) return {error:1, message:"表不存在"}
+    if(obj1.length != obj2.length){
+      if(obj1.length > obj2.length )return  {error:1, message:"行数缺少" + (obj1.length - obj2.length) + "行"};
+      else return  {error:1, message:"行数多了" + (obj2.length - obj1.length ) + "行"};
+    } 
     const keys1 = Object.keys(obj1[0]);
     const keys2 = Object.keys(obj2[0]);
     if (JSON.stringify(keys1) !== JSON.stringify(keys1)) {
@@ -63,20 +68,7 @@ export class SubmitService {
   {
   }
 
-  LookupMessage = function(sql,callback) {
-    this.CreateNewConnection();
-    let connection = this.connection;
-    connection.connect();
-    connection.query(sql, function (err, result) {
-        if (err) {
-            console.log('[SELECT ERROR]：', err.message);
-        }
-        this.str = result;
-        //使用异步回调函数传出内部值
-        callback(this.str);
-        connection.end();
-    })
-}
+ 
 
 
   async submit(a: CreateSubmitDto) {
@@ -112,9 +104,10 @@ export class SubmitService {
     return new Promise((resolve, reject) => {
       connection.query(sql, 
       (error,results, fields) => { 
-        connection.end(),
+       
           resolve({error, results, fields});
       });
+      connection.end();
   })
 /*
    connection.query(sql, function (error, results, fields) {
@@ -138,7 +131,8 @@ export class SubmitService {
       connection.query(sql,function(error, results, fields) {
         console.log(sql);
         resolve(results);
-      })
+      });
+      connection.end();
     })
   }
 
@@ -181,6 +175,19 @@ export class SubmitService {
   const se = problemnow.tocomp;
   const nid = now.nid;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
   var mysql      = require('mysql');
   var connection = mysql.createConnection({
     host     : 'localhost',
@@ -198,7 +205,7 @@ export class SubmitService {
     
   const p =  await this.gett("select *  from `" + se + "`;", connection);
  
-console.log(nid);
+  console.log(nid);
     var connection2 = mysql.createConnection({
       host     : 'localhost',
       user     : 'root',
@@ -206,12 +213,10 @@ console.log(nid);
       database : nid
     });
 
-    await connection2.connect();
+ await connection2.connect();
 
-    
   const q = await this.gett("select * from `" + sb + "`;", connection2)
-  //  console.log(p,q);
-    const t = this.Equal(p,q);
+  const t = this.Equal(p,q);
 
     if(t.error){
       await myDataSource

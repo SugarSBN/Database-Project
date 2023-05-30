@@ -185,6 +185,7 @@ export class InfoService {
     .getRepository(StateEntity)
     .createQueryBuilder("state")
     .innerJoinAndSelect(ProblemEntity, "pro", "state.problem = pro.id")
+    .where("user = :id1", { id1: id })
     .getRawMany()
     //此处不能用getmany 要用gatrawmany 否则返回空值
     
@@ -219,9 +220,9 @@ export class InfoService {
    return new Promise((resolve, reject) => {
      connection.query("show tables", 
      (error,results, fields) => {
-      connection.end(),  
       resolve({error, results});
      });
+     connection.end();
  })
   }
 
@@ -251,9 +252,9 @@ export class InfoService {
    return new Promise((resolve, reject) => {
      connection.query("select * from " + tablename, 
      (error,results, fields) => {
-        connection.end(),
         resolve({error, results, fields});
      })
+     connection.end();
   })
 }
 

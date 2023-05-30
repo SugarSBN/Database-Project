@@ -8,4 +8,7 @@ export class PermissionEntity {
 
     @Column('tinyint')
     type:number
+
+    @Column()
+    text:string
 }
