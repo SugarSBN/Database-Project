@@ -58,12 +58,12 @@ export class InfoController {
     return this.infoService.getallhistory(createInfoDto);
   }
 
-  @Get('getalltable')
+  @Post('getalltable')
   ghsalsl(@Body() createInfoDto: CreateInfoDto) {
     return this.infoService.getalltable(createInfoDto);
   }
 
-  @Get('gettable')
+  @Post('gettable')
   ghsal3sl(@Body() createInfoDto: CreateInfoDto) {
     return this.infoService.gettable(createInfoDto);
   }
