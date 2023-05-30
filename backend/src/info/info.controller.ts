@@ -48,12 +48,12 @@ export class InfoController {
     return this.infoService.getstate(createInfoDto);
   }
 */
-  @Get('getallstate')
+  @Post('getallstate')
   gsall(@Body() createInfoDto: CreateInfoDto) {
     return this.infoService.getallstate(createInfoDto);
   }
 
-  @Get('getallhis')
+  @Post('getallhis')
   ghsall(@Body() createInfoDto: CreateInfoDto) {
     return this.infoService.getallhistory(createInfoDto);
   }
