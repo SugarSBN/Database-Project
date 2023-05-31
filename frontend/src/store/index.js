@@ -9,7 +9,8 @@ import { createStore } from "vuex";
 
 const store = createStore({
   state: {
-    name: null,
+    user: null,
+    proid: 0,
   },
   mutations: {
     login(state, user) {
@@ -18,10 +19,16 @@ const store = createStore({
     logout(state) {
       state.user = null;
     },
+    selectTask(state, task) {
+      state.proid = task;
+    }
   },
   actions: {
     login({ commit }, user) {
       commit("login", user);
+    },
+    selectTask({ commit }, task) {
+      commit("selectTask", task);
     },
     logout({ commit }) {
       commit("logout");

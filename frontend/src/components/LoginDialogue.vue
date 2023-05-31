@@ -19,9 +19,8 @@
   
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="" @click="register">注册</v-btn>
+          <v-btn color="secondary" @click="register">注册</v-btn>
           <v-btn color="primary" @click="login">登录</v-btn>
-          <v-btn color="secondary" @click="cancel">取消</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

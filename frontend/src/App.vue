@@ -58,7 +58,7 @@
             </div>
           </v-col>
           <!-- 历史sql语句 -->
-          <v-col cols="4" class="pa-0" style="border: 0.5px solid #6d89b2">
+          <v-col cols="3" class="pa-0" style="border: 0.5px solid #6d89b2">
             <div class="overflow-auto">
               <EasyDataTable 
                       :headers="sqlHeader" 
@@ -78,31 +78,17 @@
 
             </div>
           </v-col>
-          <v-col cols="1" class="pa-0" style="border: 0.5px solid #6d89b2">
+          <v-col cols="2" class="pa-0" style="border: 0.5px solid #6d89b2">
             <!--按钮-->
             <v-btn color="#e9e7ef" width="48%" height="20%" style="margin-right: 5px; font-size: 20px" @click="executeSQL">执行</v-btn>
-            <!--<v-btn color="#e9e7ef" width="48%" height="20%" style="margin-bottom: 5px; font-size: 20px">回滚</v-btn>-->
+            <v-btn color="#e9e7ef" width="48%" height="20%" style="margin-bottom: 5px; font-size: 20px" @click="checkAnswer">提交</v-btn>
             <br><br/>
             <img src="./doggy.gif" alter=""/>
           </v-col>
         </v-row>
 
         <v-row style="border: 0.5px solid #6d89b2">
-          <v-col cols="4" class="pa-0" style="border: 0.5px solid #6d89b2">
-            <div>
-              <!-- Table content -->
-              <div class="overflow-auto">
-                <header>
-                  <h2 style="font-size: 15px">表信息</h2>
-                </header>
-                <EasyDataTable 
-                        :headers="tableInfoHeader" 
-                        :items="tableInfoInfo" 
-                        rows-per-page="8"/>
-              </div>
-            </div>
-          </v-col>
-          <v-col cols="4" class="pa-0" style="border: 0.5px solid #6d89b2">
+          <v-col cols="6" class="pa-0" style="border: 0.5px solid #6d89b2">
             <div>
               <!-- Table content -->
               <div class="overflow-auto">
@@ -116,7 +102,7 @@
               </div>
             </div>
           </v-col>
-          <v-col cols="4" class="pa-0" style="border: 0.5px solid #6d89b2">
+          <v-col cols="6" class="pa-0" style="border: 0.5px solid #6d89b2">
             <div>
               <!-- Code Editor -->
               <div class="editor-container">
@@ -189,7 +175,7 @@ export default {
       }
       axios({
         url: 'http://8.130.116.40:9080/info/getallhis',
-        method: 'get',
+        method: 'post',
         data: JSON.stringify(parameter),
         headers: {
           'Content-Type': 'application/json'
@@ -234,12 +220,41 @@ export default {
           this.$store.commit("login", username); 
           this.refreshTaskTable();
           this.refreshTables();
+          this.refreshHistory();
         }
       })
       // this.$store.commit("login", user);
       // console.log(this.$store.state.user);
     },
-    
+    checkAnswer(){
+      var parameter = {
+        name : this.$store.state.user,
+        proidnumber : this.$store.state.proid
+      }
+
+      console.log(parameter)
+      
+      axios({
+        url: 'http://8.130.116.40:9080/submit/check',
+        method: 'post',
+        data: JSON.stringify(parameter),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      }).then(response =>{
+        const data = response.data
+        console.log(data);
+        if (data['error'] == 1){
+          this.refreshTaskTable(true, true);
+        } else {
+          this.refreshTaskTable(true, false);
+        }
+        if (data['error'] == 1) {
+            this.textareaStyle = {color : "#ff0000" };
+          this.executionResult = data['message'];
+        }
+      })
+    },
     refreshTables(){
       var parameter = {
         name : this.$store.state.user,
@@ -268,13 +283,13 @@ export default {
       })
     },
     
-    refreshTaskTable(){
+    refreshTaskTable(rua = false, ruaa = false){
       var parameter = {
         name : this.$store.state.user
       }
       axios({
         url: 'http://8.130.116.40:9080/info/getallstate',
-        method: 'get',
+        method: 'post',
         data: JSON.stringify(parameter),
         headers: {
           'Content-Type': 'application/json'
@@ -283,13 +298,23 @@ export default {
         var taskTables = response.data['list'];
         var tmp = [];
         for (let i = 0;i < taskTables.length;i++){
+          var state = "";
+          if (taskTables[i]['state_type'] == 0) state = "未完成";
+          if (taskTables[i]['state_type'] == 1) state = "答案错误";
+          if (taskTables[i]['state_type'] == 2) state = "答案正确";
+          if (taskTables[i]['state_type'] == 3) state = "已过期";
           tmp.push({
             task: taskTables[i]['pro_name'],
             ddl: taskTables[i]['state_finishtime'],
-            result: taskTables[i]['state_myscore'],
+            result: state,
             submit: ""
           });
+          if (!ruaa && rua && taskTables[i]['pro_id'] == this.$store.state.proid) {
+            this.textareaStyle = {color : "#00ff00" };
+            this.executionResult = state;
+          }
         }
+        console.log(taskTables);
         this.taskInfo = tmp;
       })
     },
@@ -301,7 +326,7 @@ export default {
       }
       axios({
         url: 'http://8.130.116.40:9080/info/getallstate',
-        method: 'get',
+        method: 'post',
         data: JSON.stringify(parameter),
         headers: {
           'Content-Type': 'application/json'
@@ -311,6 +336,7 @@ export default {
         for (let i = 0;i < taskTables.length;i++){
           if (taskTables[i]['pro_name'] == pro_name){
             this.taskContent = taskTables[i]['pro_text'];
+            this.$store.commit("selectTask", taskTables[i]['pro_id'])
             break;
           }
         }
@@ -320,19 +346,38 @@ export default {
     handleTableViewRowClick(rowData){
       var parameter = {
         name : this.$store.state.user,
-        tablename : rowData['name']
+        tablename : "`" + rowData['name'] + "`"
       }
-      console.log(parameter);
       axios({
         url: 'http://8.130.116.40:9080/info/gettable',
-        method: 'get',
+        method: 'post',
         data: JSON.stringify(parameter),
         headers: {
           'Content-Type': 'application/json'
         },
       }).then(response =>{
-        var data = response.data;
-        console.log(data)
+        var data = response.data['results'];
+        if (data.length != 0){
+          var tmp =[];
+          for (let key in data[0]){
+            tmp.push({text : key, value : key});
+          }
+          console.log(tmp);
+          this.tableContentHeader = tmp;
+          tmp = [];
+          for (let i = 0;i < data.length;i++){
+            tmp.push(data[i]);
+          }
+          this.tableContentInfo = tmp;
+        } else {
+          var fields = response.data['fields'];
+          tmp = [];
+          for (let i = 0;i < fields.length;i++){
+            tmp.push({text : fields[i]['name'], value : fields[i]['name']});
+          }
+          this.tableContentHeader = tmp;
+          this.tableContentInfo = [];
+        }
       })
     },
 
@@ -343,9 +388,6 @@ export default {
       
       this.taskInfo = [];
       this.tableInfo = [];
-
-      this.tableInfoHeader = [];
-      this.tableInfoInfo = [];
       
       this.tableContentHeader = [];
       this.tableContentInfo = [];
@@ -376,8 +418,7 @@ export default {
       taskHeader: [
         { text: "任务", value: "task" },
         { text: "要求完成时间", value: "ddl", sortable: true },
-        { text: "结果", value: "result", sortable: true },
-        { text: "交卷验证", value: "submit", sortable: true }
+        { text: "结果", value: "result", sortable: true }
       ],
       taskInfo: [
       ],
@@ -394,13 +435,6 @@ export default {
         {text : "1"},
       ],
 
-      tableInfoHeader: [
-        { text: "表名", value: "name"},
-        { text: "字段", value: "attribute"},
-        { text: "类型", value: "type"}
-      ],
-      tableInfoInfo : [
-      ],
       tableContentHeader : [
       ],
       tableContentInfo : [
